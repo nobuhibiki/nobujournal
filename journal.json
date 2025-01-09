@@ -1,1 +1,16 @@
-{"entries": []}
+{
+  "entries": [
+    {
+      "type": "mood",
+      "content": "feeling lonely",
+      "timestamp": "2025-01-09T17:58:16.278768",
+      "user_id": 255538386
+    },
+    {
+      "type": "entry",
+      "content": "wishing that i'm less lonely dawg",
+      "timestamp": "2025-01-09T17:58:16.718739",
+      "user_id": 255538386
+    }
+  ]
+}
