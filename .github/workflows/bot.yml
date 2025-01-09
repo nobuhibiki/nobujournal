@@ -3,7 +3,7 @@ name: Telegram Journal Bot
 on:
   workflow_dispatch:  # Manual trigger
   schedule:
-    - cron: '*/5 * * * *'  # Run every 5 minutes
+    - cron: '*/15 * * * *'  # Run every 15 minutes instead of 5
 
 jobs:
   bot:
@@ -18,7 +18,7 @@ jobs:
           
       - name: Install Dependencies
         run: pip install python-telegram-bot
-
+        
       - name: Run Bot
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

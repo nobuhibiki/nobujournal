@@ -2,6 +2,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters
 import json
 from datetime import datetime
 import os
+import asyncio
 
 # Load or create journal
 def load_journal():
@@ -53,7 +54,7 @@ async def add_mood(update, context):
     save_journal(journal)
     await update.message.reply_text(f"Mood '{mood}' recorded! 🎭")
 
-def main():
+async def main():
     # Get bot token
     token = os.getenv('TELEGRAM_BOT_TOKEN')
     if not token:
@@ -66,9 +67,14 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("mood", add_mood))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, save_message))
-    
-    # Run the bot
-    application.run_polling()
+
+    # Process updates once
+    await application.initialize()
+    updates = await application.bot.get_updates()
+    if updates:
+        last_update_id = updates[-1].update_id
+        await application.bot.get_updates(offset=last_update_id + 1)
+    await application.shutdown()
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
