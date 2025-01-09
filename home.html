@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Journal Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .entry-box {
+            transition: all 0.2s ease;
+        }
+        .entry-box:hover {
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div id="root"></div>
+    <script type="text/babel">
+        function JournalCalendar({ entries }) {
+            const [selectedEntry, setSelectedEntry] = React.useState(null);
+            const [year, setYear] = React.useState(new Date().getFullYear());
+            
+            // Group entries by date
+            const entriesByDate = React.useMemo(() => {
+                const grouped = {};
+                entries.forEach(entry => {
+                    const date = dayjs(entry.timestamp).format('YYYY-MM-DD');
+                    if (!grouped[date]) {
+                        grouped[date] = [];
+                    }
+                    grouped[date].push(entry);
+                });
+                return grouped;
+            }, [entries]);
+
+            // Generate calendar grid
+            const generateCalendarDays = () => {
+                const startDate = dayjs(`${year}-01-01`);
+                const endDate = dayjs(`${year}-12-31`);
+                const days = [];
+                
+                let currentDate = startDate;
+                while (currentDate.isBefore(endDate) || currentDate.isSame(endDate)) {
+                    const dateStr = currentDate.format('YYYY-MM-DD');
+                    const dayEntries = entriesByDate[dateStr] || [];
+                    
+                    // Determine color based on number of entries and mood
+                    let bgColor = 'bg-gray-200';
+                    if (dayEntries.length > 0) {
+                        const hasMood = dayEntries.some(e => e.type === 'mood');
+                        if (hasMood) {
+                            bgColor = 'bg-green-500';
+                        } else {
+                            bgColor = 'bg-blue-500';
+                        }
+                    }
+                    
+                    days.push({
+                        date: currentDate,
+                        entries: dayEntries,
+                        bgColor
+                    });
+                    
+                    currentDate = currentDate.add(1, 'day');
+                }
+                
+                return days;
+            };
+
+            return (
+                <div className="container mx-auto px-4 py-8">
+                    <div className="flex justify-between items-center mb-8">
+                        <h1 className="text-3xl font-bold">Journal Calendar {year}</h1>
+                        <div className="space-x-4">
+                            <button 
+                                onClick={() => setYear(year - 1)}
+                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                            >
+                                Previous Year
+                            </button>
+                            <button 
+                                onClick={() => setYear(year + 1)}
+                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                            >
+                                Next Year
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-53 gap-1">
+                        {generateCalendarDays().map((day, i) => (
+                            <div
+                                key={i}
+                                className={`entry-box w-4 h-4 rounded cursor-pointer ${day.bgColor}`}
+                                onClick={() => setSelectedEntry(day)}
+                                title={`${day.date.format('YYYY-MM-DD')} (${day.entries.length} entries)`}
+                            />
+                        ))}
+                    </div>
+                    
+                    {selectedEntry && (
+                        <div className="mt-8 p-4 bg-white rounded-lg shadow">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-semibold">
+                                    {selectedEntry.date.format('MMMM D, YYYY')}
+                                </h2>
+                                <button 
+                                    onClick={() => setSelectedEntry(null)}
+                                    className="text-gray-500 hover:text-gray-700"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                            {selectedEntry.entries.length === 0 ? (
+                                <p className="text-gray-500">No entries for this day</p>
+                            ) : (
+                                <div className="space-y-4">
+                                    {selectedEntry.entries.map((entry, i) => (
+                                        <div key={i} className="border-l-4 border-blue-500 pl-4">
+                                            <p className="text-sm text-gray-500">
+                                                {dayjs(entry.timestamp).format('HH:mm')}
+                                            </p>
+                                            <p className="mt-1">{entry.content}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Fetch and display entries
+        async function App() {
+            const [entries, setEntries] = React.useState([]);
+            const [loading, setLoading] = React.useState(true);
+            
+            React.useEffect(() => {
+                fetch('journal.json')
+                    .then(res => res.json())
+                    .then(data => {
+                        setEntries(data.entries);
+                        setLoading(false);
+                    })
+                    .catch(error => {
+                        console.error('Error loading journal entries:', error);
+                        setLoading(false);
+                    });
+            }, []);
+            
+            if (loading) {
+                return <div className="flex justify-center items-center min-h-screen">
+                    <div className="text-xl">Loading...</div>
+                </div>;
+            }
+            
+            return <JournalCalendar entries={entries} />;
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.22.17/babel.min.js"></script>
+</body>
+</html>

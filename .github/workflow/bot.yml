@@ -1,0 +1,29 @@
+name: Telegram Journal Bot
+
+on:
+  telegram:
+    # This will be your webhook endpoint
+    types: [message]
+  schedule:
+    # Run every 5 minutes to check for new messages
+    - cron: '*/5 * * * *'
+
+jobs:
+  process-message:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Process message
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node bot.js

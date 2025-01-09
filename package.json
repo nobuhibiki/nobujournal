@@ -1,0 +1,9 @@
+{
+    "name": "telegram-journal-bot",
+    "version": "1.0.0",
+    "dependencies": {
+      "telegraf": "^4.12.2",
+      "@octokit/rest": "^19.0.7"
+    }
+  }
+  
