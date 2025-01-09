@@ -1,12 +1,14 @@
 name: Telegram Journal Bot
 
 on:
-  telegram:
-    # This will be your webhook endpoint
-    types: [message]
   schedule:
     # Run every 5 minutes to check for new messages
     - cron: '*/5 * * * *'
+  # Allow manual triggering
+  workflow_dispatch:
+  # Optionally trigger on webhook if you set up a webhook endpoint
+  repository_dispatch:
+    types: [telegram-webhook]
 
 jobs:
   process-message:
