@@ -1,15 +1,19 @@
 name: Telegram Journal Bot
 
 on:
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:
   schedule:
-    - cron: '*/15 * * * *'  # Run every 15 minutes instead of 5
+    - cron: '*/2 * * * *'  # Run every 2 minutes
 
 jobs:
   bot:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -25,10 +29,22 @@ jobs:
         run: python bot.py
         
       - name: Commit changes
-        if: success()
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          # Check if journal.json exists and create it if it doesn't
+          if [ ! -f "journal.json" ]; then
+            echo '{"entries": []}' > journal.json
+          fi
+          
+          # Add and commit changes
           git add journal.json
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update journal entries"
-          git push
+          
+          # Try to commit and handle errors
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update journal entries [skip ci]"
+            git push
+          fi
